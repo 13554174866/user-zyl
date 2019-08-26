@@ -55,22 +55,22 @@
                         </div>
                         <div class="form-group">
                             <label>邮箱</label>
-                            <input class="form-control" name="email" type="email" placeholder="请输入邮箱">
+                            <input class="form-control" name="email" type="email" placeholder="请输入邮箱" id="email">
                         </div>
                         <div class="form-group">
                             <label>昵称</label>
-                            <input class="form-control" name="nickName" type="text" placeholder="请输入昵称">
+                            <input class="form-control" name="nickName" type="text" placeholder="请输入昵称" id="nickName">
                         </div>
                         <div class="form-group">
                             <label>密码</label>
-                            <input class="form-control" name="password" type="text" placeholder="请输入密码">
+                            <input class="form-control" name="password" type="text" placeholder="请输入密码" id="password">
                         </div>
                         <div class="form-group">
                             <div class="radio-inline">
-                                <label><input type="radio" name="status" value="0">未激活</label>
+                                <label><input type="radio" name="status" value="0" id="wjh">未激活</label>
                             </div>
                             <div class="radio-inline">
-                                <label><input type="radio" name="status" value="1">激活</label>
+                                <label><input type="radio" name="status" value="1" id="jh">激活</label>
                             </div>
                         </div>
                         <div class="form-group">
@@ -83,6 +83,7 @@
                         </div>
                         <div class="form-group">
                             <button class="btn btn-primary" type="button" id="addUser">添加</button>
+                            <button class="btn btn-primary" type="button" id="editUser" style="display:none">修改</button>
                         </div>
                     </form>
                 </div>
@@ -161,8 +162,8 @@
             <td>{{$value.nickName}}</td>
             <td>{{$value.status==1 ? '激活' : '未激活'}}</td>
             <td>{{$value.role=='admin' ? '超级管理员' : '普通用户'}}</td>
-            <td class="text-center">
-                <a href="javascript:;" class="btn btn-default btn-xs" data-id="{{$value._id}}">编辑</a>
+            <td class="text-center" data-id="{{$value._id}}">
+                <a href="javascript:;" class="btn btn-default btn-xs edit">编辑</a>
                 <a href="javascript:;" class="btn btn-danger btn-xs">删除</a>
             </td>
         </tr>
@@ -214,6 +215,61 @@
                     $('#prev').attr('src', res[0].avatar)
                     $('#hiddenAvatar').val(res[0].avatar)
 
+                }
+            })
+        })
+        var id;
+        $('tbody').on('click', '.edit', function() {
+            id = $(this).parent().attr('data-id');
+            $('form>h2').text('修改用户');
+            var trObj = $(this).parents('tr');
+            $('#email').val(trObj.children().eq(2).text());
+            $('#nickName').val(trObj.children().eq(3).text());
+            var status = trObj.children().eq(4).text();
+            var role = trObj.children().eq(5).text();
+            var imgSrc = trObj.children().eq(1).find('img').attr('src');
+            console.log(imgSrc);
+            if (imgSrc) {
+                $('#prev').attr("src", imgSrc);
+                $('#hiddenAvatar').val(imgSrc);
+            } else {
+                $('#prev').attr('src', '../assets/img/default.png');
+                $('#hiddenAvatar').val('');
+            }
+            if (status == '激活') {
+                $('#jh').prop('checked', true)
+            } else {
+                $('#wjh').prop('checked', true)
+            }
+            if (role == '超级管理员') {
+                $('#admin').prop('checked', true)
+            } else {
+                $('#normal').prop('checked', true)
+            }
+            $('#addUser').hide();
+            $('#editUser').show();
+        })
+        $('#editUser').on('click', function() {
+            var formData = $('form').serialize();
+            $.ajax({
+                type: 'put',
+                url: '/users/' + id,
+                data: formData,
+                success: function(res) {
+                    var index = userArr.findIndex(item => item._id == res._id)
+                    userArr[index] = res;
+                    render(userArr)
+                    $('addUser').show()
+                    $('#editUser').hide()
+                    $('form>h2').text('添加新用户')
+                    $('#hiddenAvatar').val('')
+                    $('#prev').attr('src', '../assets/img/default.png')
+                    $('#email').val('')
+                    $('#nickName').val('')
+                    $('#admin').prop('checked', false)
+                    $('#normal').prop('checked', true)
+                    $('#jh').prop('checked', false)
+                    $('#wjh').prop('checked', true)
                 }
             })
         })
