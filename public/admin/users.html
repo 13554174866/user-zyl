@@ -27,7 +27,7 @@
             <button class="btn btn-default navbar-btn fa fa-bars"></button>
             <ul class="nav navbar-nav navbar-right">
                 <li><a href="profile.html"><i class="fa fa-user"></i>个人中心</a></li>
-                <li><a href="login.html"><i class="fa fa-sign-out"></i>退出</a></li>
+                <li><a href="javascript:;" id="logout"><i class="fa fa-sign-out"></i>退出</a></li>
             </ul>
         </nav>
         <div class="container-fluid">
@@ -46,42 +46,43 @@
                             <label>头像</label>
                             <div class="form-group">
                                 <label class="form-image">
-                  <input id="avatar" type="file">
-                  <img src="../assets/img/default.png">
-                  <i class="mask fa fa-upload"></i>
-                </label>
+                                    <input id="avatar" type="file">
+                                    <img src="../assets/img/default.png" id="prev">
+                                    <i class="mask fa fa-upload"></i>
+                                </label>
+                                <input type="hidden" name="avatar" id="hiddenAvatar">
                             </div>
                         </div>
                         <div class="form-group">
                             <label>邮箱</label>
-                            <input class="form-control" type="email" placeholder="请输入邮箱">
+                            <input class="form-control" name="email" type="email" placeholder="请输入邮箱">
                         </div>
                         <div class="form-group">
                             <label>昵称</label>
-                            <input class="form-control" type="text" placeholder="请输入昵称">
+                            <input class="form-control" name="nickName" type="text" placeholder="请输入昵称">
                         </div>
                         <div class="form-group">
                             <label>密码</label>
-                            <input class="form-control" type="text" placeholder="请输入密码">
+                            <input class="form-control" name="password" type="text" placeholder="请输入密码">
                         </div>
                         <div class="form-group">
                             <div class="radio-inline">
-                                <label><input type="radio">未激活</label>
+                                <label><input type="radio" name="status" value="0">未激活</label>
                             </div>
                             <div class="radio-inline">
-                                <label><input type="radio">激活</label>
+                                <label><input type="radio" name="status" value="1">激活</label>
                             </div>
                         </div>
                         <div class="form-group">
                             <div class="radio-inline">
-                                <label><input type="radio">超级管理员</label>
+                                <label><input type="radio" name="role" value="admin" checked>超级管理员</label>
                             </div>
                             <div class="radio-inline">
-                                <label><input type="radio">普通用户</label>
+                                <label><input type="radio" name="role" value="normal">普通用户</label>
                             </div>
                         </div>
                         <div class="form-group">
-                            <button class="btn btn-primary" type="submit">添加</button>
+                            <button class="btn btn-primary" type="button" id="addUser">添加</button>
                         </div>
                     </form>
                 </div>
@@ -155,11 +156,11 @@
         {{each list}}
         <tr>
             <td class="text-center"><input type="checkbox"></td>
-            <td class="text-center"><img class="avatar" src="../assets/img/default.png"></td>
+            <td class="text-center"><img class="avatar" src="{{$value.avatar}}"></td>
             <td>{{$value.email}}</td>
             <td>{{$value.nickName}}</td>
-            <td>{{$value.status==0 ? '激活' : '未激活'}}</td>
-            <td>{{$value.role=='admin' ? '管理员' : '普通用户'}}</td>
+            <td>{{$value.status==1 ? '激活' : '未激活'}}</td>
+            <td>{{$value.role=='admin' ? '超级管理员' : '普通用户'}}</td>
             <td class="text-center">
                 <a href="javascript:;" class="btn btn-default btn-xs" data-id="{{$value._id}}">编辑</a>
                 <a href="javascript:;" class="btn btn-danger btn-xs">删除</a>
@@ -168,24 +169,57 @@
         {{/each}}
     </script>
     <script>
-        var userarr = [];
+        var userArr = [];
         $.ajax({
             type: 'get',
             url: '/users',
             success: function(res) {
-                // console.log(res)将res赋值给userarr
-                userarr = res
-
+                // console.log(res)将res赋值给userArr
+                userArr = res
+                render(userArr)
             }
         })
 
         function render(arr) {
-            var sta = template('userTpl', {
+            var str = template('userTpl', {
                 list: arr
             })
             $('tbody').html(str)
         }
+        $('#addUser').on('click', function() {
+            var formData = $('form').serialize()
+            $.ajax({
+                type: 'post',
+                url: '/users',
+                data: formData,
+                success: function(res) {
+                    userArr.push(res)
+                    render(userArr)
+                }
+            })
+        })
+        $('#avatar').on('change', function() {
+            // this.files
+            var formData = new FormData()
+            formData.append('avatar',
+                this.files[0])
+            $.ajax({
+                type: 'post',
+                url: '/upload',
+                data: formData,
+                processData: false, //文件上传必填
+                contentType: false, //文件上传必填
+                success: function(res) {
+                    // console.log(res)
+                    $('#prev').attr('src', res[0].avatar)
+                    $('#hiddenAvatar').val(res[0].avatar)
+
+                }
+            })
+        })
     </script>
+    <script src="../assets/js/common.js"></script>
+
     <script>
         NProgress.done()
     </script>
